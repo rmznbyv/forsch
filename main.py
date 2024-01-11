@@ -48,7 +48,6 @@ def is_valid_email_format(text):
         print(f"Error: {e}")
         return False
 
-
 def fix_emails(data):
     for entry in data:
         if "emails" in entry:
@@ -70,18 +69,13 @@ def save_to_json(data, filename):
 
 def save_to_excel(data, filename):
     try:
-        
         existing_data = pd.read_excel(filename, engine='openpyxl')
     except FileNotFoundError:
         existing_data = pd.DataFrame()
 
-    
     new_data = pd.DataFrame(data)
-
-    
     final_data = pd.concat([existing_data, new_data], ignore_index=True)
     final_data.to_excel(filename, index=False, engine='openpyxl')
-
 
 country_selector = Select(driver.find_element(By.ID, 'SelectedRegionId'))  
 countries = country_selector.options
@@ -124,29 +118,21 @@ for country_index in range(1, len(countries)):
                     }
 
                     try:
-                        
                         driver.get(info['link'])
-
-                        
                         emails_on_page = extract_emails_from_page()
                         if emails_on_page:
                             schoolsdata["emails"] = [email for email in emails_on_page if is_valid_email_format(email)]
                         else:
                             schoolsdata["emails"] = []
 
-                        
                         save_to_json(schoolsdata, "schools-info-fix.json")
-
-                        
                         save_to_excel([schoolsdata], "schools-info.xlsx")
-
                         print(schoolsdata)
 
                     except Exception as e:
                         print(f"Error emails: {str(e)}")
 
                     finally:
-                        
                         driver.back()
 
             except Exception as e:
@@ -154,9 +140,8 @@ for country_index in range(1, len(countries)):
 
     except Exception as e:
         print(f"Error country: {str(e)}")
-        
-        save_to_json({}, "schoolsinfo_fixed.json")
-        save_to_excel({}, "schoolsinfo.xlsx")
 
+        # Continue to the next country even if an error occurs
+        continue
 
 driver.quit()
