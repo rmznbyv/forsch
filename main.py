@@ -5,7 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from validate_email_address import validate_email
+from email_validator import validate_email, EmailNotValidError
 import time
 import pandas as pd
 
@@ -13,6 +13,8 @@ options = webdriver.EdgeOptions()
 driver = webdriver.Edge(options=options)
 
 driver.get("https://www.cambridgeinternational.org/why-choose-us/find-a-cambridge-school/")
+
+selected_countries = ["Turkey", "Georgia", "Oman", "Egypt", "Qatar", "Turkmenistan", "Uzbekistan", "Kyrgyzstan", "Tajikistan", "Kazakhstan"]
 
 def get_schoolsinfo():
     WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, 'result-container')))
@@ -34,7 +36,18 @@ def extract_emails_from_page():
     return emails
 
 def is_valid_email_format(text):
-    return validate_email(email, verify=True)
+    try:
+        # Validate the email address
+        v = validate_email(text)
+
+        # If no exception is raised, the email is valid
+        return True
+
+    except EmailNotValidError as e:
+        # Handle the invalid email address case
+        print(f"Error: {e}")
+        return False
+
 
 def fix_emails(data):
     for entry in data:
@@ -73,11 +86,12 @@ def save_to_excel(data, filename):
 country_selector = Select(driver.find_element(By.ID, 'SelectedRegionId'))  
 countries = country_selector.options
 
-for country_index in range(1, len(countries)):  
+for country_index in range(1, len(countries)):
     country_selector.select_by_index(country_index)
     selected_country_option = country_selector.first_selected_option
     country = selected_country_option.get_attribute('value')
-    if country == "Online":
+
+    if country == "Online" or country not in selected_countries:
         continue
 
     try:
@@ -125,6 +139,8 @@ for country_index in range(1, len(countries)):
 
                         
                         save_to_excel([schoolsdata], "schools-info.xlsx")
+
+                        print(schoolsdata)
 
                     except Exception as e:
                         print(f"Error emails: {str(e)}")
